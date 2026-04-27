@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supermarket Pro</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="styles.css">
+    <!-- Chart.js for charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="dark-theme">
+    <div id="login-view" class="view active">
+        <div class="login-container">
+            <div class="glow-box">
+                <h2>Supermarket Pro</h2>
+                <form id="login-form">
+                    <div class="input-group">
+                        <i data-lucide="user"></i>
+                        <input type="text" id="username" placeholder="Username (any)" required>
+                    </div>
+                    <div class="input-group">
+                        <i data-lucide="lock"></i>
+                        <input type="password" id="password" placeholder="Password (any)" required>
+                    </div>
+                    <button type="submit" class="neon-btn w-full">Login</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="app-view" class="view hidden">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <i data-lucide="zap" class="neon-icon"></i>
+                <h2>SuperApp</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#" data-target="dashboard" class="nav-item active"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+                <a href="#" data-target="inventory" class="nav-item"><i data-lucide="package"></i> Inventory</a>
+                <a href="#" data-target="billing" class="nav-item"><i data-lucide="shopping-bag"></i> Billing (POS)</a>
+                <a href="#" data-target="staff" class="nav-item"><i data-lucide="users"></i> Staff</a>
+                <a href="#" data-target="sales" class="nav-item"><i data-lucide="trending-up"></i> Sales & Profit</a>
+                <a href="#" data-target="reports" class="nav-item"><i data-lucide="file-text"></i> Reports</a>
+            </nav>
+            <div class="sidebar-footer">
+                <button id="logout-btn" class="nav-item w-full"><i data-lucide="log-out"></i> Logout</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <h1 id="page-title">Dashboard</h1>
+                <div class="topbar-actions">
+                    <div class="notification-container" style="position: relative;">
+                        <button id="notify-btn" class="icon-btn"><i data-lucide="bell"></i><span id="notify-badge" class="badge">0</span></button>
+                        <div id="notification-dropdown" class="dropdown hidden">
+                            <!-- Notifications injected here -->
+                        </div>
+                    </div>
+                    <div class="user-profile">
+                        <img src="https://ui-avatars.com/api/?name=Admin&background=00f3ff&color=000" alt="Profile">
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <!-- Dashboard View -->
+                <section id="dashboard-view" class="page-view active">
+                    <div class="metric-cards" style="margin-bottom: 1.5rem;">
+                        <div class="card glow-border fade-in">
+                            <div class="card-icon"><i data-lucide="package"></i></div>
+                            <div class="card-info">
+                                <h3>Total Stock</h3>
+                                <p><span id="metric-stock">0</span> <span id="trend-stock" class="trend neutral">--</span></p>
+                            </div>
+                        </div>
+                        <div class="card glow-border fade-in delay-1">
+                            <div class="card-icon"><i data-lucide="shopping-cart"></i></div>
+                            <div class="card-info">
+                                <h3>Today's Sales</h3>
+                                <p><span id="metric-sales">$0</span> <span id="trend-sales" class="trend neutral">--</span></p>
+                            </div>
+                        </div>
+                        <div class="card glow-border fade-in delay-2">
+                            <div class="card-icon"><i data-lucide="dollar-sign"></i></div>
+                            <div class="card-info">
+                                <h3>Today's Profit</h3>
+                                <p><span id="metric-profit">$0</span> <span id="trend-profit" class="trend neutral">--</span></p>
+                            </div>
+                        </div>
+                        <div class="card glow-border alert fade-in delay-3">
+                            <div class="card-icon"><i data-lucide="alert-triangle"></i></div>
+                            <div class="card-info">
+                                <h3>Low Stock Items</h3>
+                                <p><span id="metric-low-stock">0</span> <span id="trend-low-stock" class="trend neutral">--</span></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="charts-container fade-in delay-4">
+                        <div class="card chart-card glow-border">
+                            <h3>Weekly Sales vs Profit Overview</h3>
+                            <canvas id="salesChart"></canvas>
+                        </div>
+                        <div class="card chart-card glow-border">
+                            <h3>Stock by Category Distribution</h3>
+                            <canvas id="categoryChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-grid fade-in delay-4">
+                        <div class="card glow-border">
+                            <h3><i data-lucide="trending-up" class="neon-icon" style="margin-right: 0.5rem; width:18px;"></i> Top 5 Selling Products</h3>
+                            <ul class="insight-list" id="top-products-list">
+                                <!-- Populated by JS -->
+                            </ul>
+                        </div>
+                        <div class="card glow-border alert">
+                            <h3 style="color: var(--neon-red);"><i data-lucide="trending-down" style="margin-right: 0.5rem; width:18px;"></i> Dead Stock Warning</h3>
+                            <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.5rem;">Items with high stock but zero or low past sales.</p>
+                            <ul class="insight-list" id="dead-stock-list">
+                                <!-- Populated by JS -->
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="card glow-border fade-in delay-4" style="margin-bottom: 1.5rem;">
+                        <h3 style="color: var(--neon-cyan); margin-bottom: 1rem;"><i data-lucide="zap" class="neon-icon"></i> Smart Restock Suggestions</h3>
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Current Stock</th>
+                                        <th>Past Sales</th>
+                                        <th>Suggested Qty</th>
+                                        <th>Reason</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dashboard-restock-tbody">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Billing View -->
+                <section id="billing-view" class="page-view hidden">
+                    <div class="page-header">
+                        <h2>Point of Sale (POS)</h2>
+                    </div>
+                    <div class="billing-container">
+                        <div class="products-panel card glow-border">
+                            <input type="text" id="billing-search" placeholder="Search products to add..." class="search-input w-full" style="margin-bottom: 1rem;">
+                            <div class="product-grid" id="billing-product-grid">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                        <div class="cart-panel card glow-border">
+                            <h3>Current Order</h3>
+                            <div class="cart-items" id="cart-items">
+                                <!-- Populated by JS -->
+                            </div>
+                            <div class="cart-summary">
+                                <div class="summary-row"><span>Subtotal:</span> <span id="cart-subtotal">$0.00</span></div>
+                                <div class="summary-row"><span>Tax (5%):</span> <span id="cart-tax">$0.00</span></div>
+                                <div class="summary-row total"><span>Total:</span> <span id="cart-total" class="neon-text" style="font-weight: 700; font-size: 1.5rem;">$0.00</span></div>
+                                <button id="checkout-btn" class="neon-btn w-full mt-4"><i data-lucide="credit-card"></i> Process Checkout</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Inventory View -->
+                <section id="inventory-view" class="page-view hidden">
+                    <div class="page-header">
+                        <h2>Inventory Management</h2>
+                        <div style="display:flex; gap:1rem;">
+                            <button id="audit-btn" class="neon-btn"><i data-lucide="clipboard-check"></i> Perform Audit</button>
+                            <button id="add-product-btn" class="neon-btn"><i data-lucide="plus"></i> Add Product</button>
+                        </div>
+                    </div>
+                    <div class="card table-container glow-border">
+                        <div class="table-actions">
+                            <input type="text" id="search-inventory" placeholder="Search products..." class="search-input">
+                            <select id="filter-inventory" class="select-input">
+                                <option value="all">All Items</option>
+                                <option value="low">Low Stock</option>
+                                <option value="out">Out of Stock</option>
+                                <option value="restock">Smart Restock Suggestion</option>
+                            </select>
+                        </div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Category</th>
+                                    <th>Price</th>
+                                    <th>Stock</th>
+                                    <th>Expiry</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventory-tbody">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Staff View -->
+                <section id="staff-view" class="page-view hidden">
+                    <div class="page-header">
+                        <h2>Staff Management</h2>
+                        <button id="add-staff-btn" class="neon-btn"><i data-lucide="user-plus"></i> Add Staff</button>
+                    </div>
+                    <div class="card table-container glow-border">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Role</th>
+                                    <th>Shift</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="staff-tbody">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+                
+                <!-- Sales View -->
+                <section id="sales-view" class="page-view hidden">
+                    <div class="page-header">
+                        <h2>Sales & Profit Tracking</h2>
+                    </div>
+                    <div class="card glow-border">
+                        <p style="color: var(--text-muted);">Detailed daily sales logs and profit calculations.</p>
+                        <table class="data-table mt-4">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Total Revenue</th>
+                                    <th>Total Cost</th>
+                                    <th>Net Profit</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sales-log-tbody">
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Reports View -->
+                <section id="reports-view" class="page-view hidden">
+                    <div class="page-header">
+                        <h2>Reports & Analytics</h2>
+                    </div>
+                    <div class="card glow-border" style="display:flex; flex-direction:column; gap:1.5rem;">
+                        <p style="color: var(--text-muted);">Generate comprehensive reports for your supermarket operations.</p>
+                        <div style="display:flex; gap:1rem;">
+                            <button id="report-sales-btn" class="neon-btn"><i data-lucide="download"></i> Daily Sales Report</button>
+                            <button id="report-audit-btn" class="neon-btn"><i data-lucide="download"></i> Inventory Audit</button>
+                            <button id="report-restock-btn" class="neon-btn"><i data-lucide="download"></i> Smart Restock List</button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="product-modal" class="modal hidden">
+        <div class="modal-content glow-box">
+            <div class="modal-header">
+                <h3 id="product-modal-title">Add Product</h3>
+                <button class="close-modal icon-btn"><i data-lucide="x"></i></button>
+            </div>
+            <form id="product-form">
+                <input type="hidden" id="prod-id">
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" id="prod-name" required>
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <input type="text" id="prod-category" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Cost Price ($)</label>
+                        <input type="number" id="prod-cost" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Selling Price ($)</label>
+                        <input type="number" id="prod-price" step="0.01" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Current Stock</label>
+                        <input type="number" id="prod-stock" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Expiry Date</label>
+                        <input type="date" id="prod-expiry">
+                    </div>
+                </div>
+                <button type="submit" class="neon-btn w-full">Save Product</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Staff Modal -->
+    <div id="staff-modal" class="modal hidden">
+        <div class="modal-content glow-box">
+            <div class="modal-header">
+                <h3 id="staff-modal-title">Add Staff</h3>
+                <button class="close-modal icon-btn"><i data-lucide="x"></i></button>
+            </div>
+            <form id="staff-form">
+                <input type="hidden" id="staff-id">
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" id="staff-name" required>
+                </div>
+                <div class="form-group">
+                    <label>Role</label>
+                    <select id="staff-role" class="w-full" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.75rem; border-radius: 8px; outline: none;">
+                        <option value="Manager">Manager</option>
+                        <option value="Cashier">Cashier</option>
+                        <option value="Stocker">Stocker</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Shift</label>
+                        <input type="text" id="staff-shift" placeholder="e.g. Morning" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="staff-status" class="w-full" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.75rem; border-radius: 8px; outline: none;">
+                            <option value="Active">Active</option>
+                            <option value="On Leave">On Leave</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="neon-btn w-full mt-4">Save Staff</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Audit Modal -->
+    <div id="audit-modal" class="modal hidden">
+        <div class="modal-content glow-box">
+            <div class="modal-header">
+                <h3>Stock Audit</h3>
+                <button class="close-modal icon-btn"><i data-lucide="x"></i></button>
+            </div>
+            <form id="audit-form">
+                <div class="form-group">
+                    <label>Select Product</label>
+                    <select id="audit-product" class="w-full" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.75rem; border-radius: 8px; outline: none;" required>
+                        <option value="" disabled selected>Select a product...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>System Recorded Stock</label>
+                    <input type="number" id="audit-recorded" disabled style="opacity: 0.7;">
+                </div>
+                <div class="form-group">
+                    <label>Actual Physical Stock</label>
+                    <input type="number" id="audit-actual" required>
+                </div>
+                <button type="submit" class="neon-btn w-full mt-4">Save Audit Difference</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
